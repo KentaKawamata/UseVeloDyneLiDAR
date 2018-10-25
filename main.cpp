@@ -1,11 +1,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <boost/timer.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/vlp_grabber.h>
 #include <pcl/console/parse.h>
+#include <pcl/common/common_headers.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/io/ply_io.h>
 
@@ -13,8 +15,22 @@
 // pcl::PointXYZ, pcl::PointXYZI, pcl::PointXYZRGBA
 typedef pcl::PointXYZI PointType;
 
-int main( int argc, char *argv[] )
-{
+
+/*
+void keyboardEvent(const pcl::visualization::KeyboardEvent &event,
+                            pcl::PointCloud<PointType>::ConstPtr cloud) {
+
+    if(event.getKeySym() == "space" && event.keyDown()){
+
+        pcl::io::savePLYFileASCII("test.ply", *cloud);
+        std::cout << "---------- SAVE DATA !!!!! ----------" << std::endl;
+    }
+        //next_iteration = true;
+}
+*/
+
+int main( int argc, char *argv[] ) {
+
     // Command-Line Argument Parsing
     if( pcl::console::find_switch( argc, argv, "-help" ) ){
         std::cout << "usage: " << argv[0]
@@ -47,6 +63,7 @@ int main( int argc, char *argv[] )
     viewer->setBackgroundColor( 0.0, 0.0, 0.0, 0 );
     viewer->initCameraParameters();
     viewer->setCameraPosition( 0.0, 0.0, 30.0, 0.0, 1.0, 0.0, 0 );
+    //viewer->registerKeyboardCallback(keyboardEvent, *cloud);
 
     // Point Cloud Color Hndler
     pcl::visualization::PointCloudColorHandler<PointType>::Ptr handler;
@@ -95,10 +112,19 @@ int main( int argc, char *argv[] )
 
     // Start Grabber
     grabber->start();
+    boost::timer t;
+    int num=0;
 
     while( !viewer->wasStopped() ){
         // Update Viewer
         viewer->spinOnce();
+
+        if (t.elapsed() >= 5.0) { // 秒
+            t.restart();
+            std::string filename = "Velodyne_" + std::to_string(num) + ".ply";
+            pcl::io::savePLYFileASCII(filename, *cloud);
+            num++;
+        }
 
         boost::mutex::scoped_try_lock lock( mutex );
         if( lock.owns_lock() && cloud ){
@@ -109,7 +135,7 @@ int main( int argc, char *argv[] )
             }
         }
     }
-    pcl::io::savePLYFileASCII("test.ply", *cloud);
+    //pcl::io::savePLYFileASCII("test.ply", *cloud);
 
     // Stop Grabber
     grabber->stop();
