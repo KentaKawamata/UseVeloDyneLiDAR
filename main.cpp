@@ -121,7 +121,7 @@ int main( int argc, char *argv[] ) {
 
         if (t.elapsed() >= 5.0) { // 秒
             t.restart();
-            std::string filename = "Velodyne_" + std::to_string(num) + ".ply";
+            std::string filename = "./data/Velodyne_" + std::to_string(num) + ".ply";
             pcl::io::savePLYFileASCII(filename, *cloud);
             num++;
         }
